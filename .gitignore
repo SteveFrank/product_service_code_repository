@@ -1,0 +1,5 @@
+# Created by .ignore support plugin (hsz.mobi)
+.idea
+.idea/workspace.xml
+product_service_code_repository.iml
+eshop_inventory/target

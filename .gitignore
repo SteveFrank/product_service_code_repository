@@ -3,3 +3,7 @@
 .idea/workspace.xml
 product_service_code_repository.iml
 eshop_inventory/target
+.idea/vcs.xml
+eshop_inventory/target/generated-sources/
+eshop_inventory/target/generated-test-sources/
+eshop_inventory/target/test-classes/

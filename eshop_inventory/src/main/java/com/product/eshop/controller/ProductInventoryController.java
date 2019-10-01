@@ -33,6 +33,7 @@ public class ProductInventoryController {
     @RequestMapping("/updateProductInventory")
     @ResponseBody
     public Response updateProductInventory(ProductInventory productInventory) {
+        log.info("接受到更新商品库存的请求 ... ...");
         Response response = null;
         try {
             Request request = new ProductInventoryDBUpdateRequest(

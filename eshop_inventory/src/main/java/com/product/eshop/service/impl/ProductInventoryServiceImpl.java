@@ -4,6 +4,7 @@ import com.product.eshop.dao.redis.RedisDao;
 import com.product.eshop.mapper.ProductInventoryMapper;
 import com.product.eshop.model.ProductInventory;
 import com.product.eshop.service.ProductInventoryService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -12,6 +13,7 @@ import javax.annotation.Resource;
  * @author yangqian
  * @date 2019/8/28
  */
+@Slf4j
 @Service("productInventoryService")
 public class ProductInventoryServiceImpl implements ProductInventoryService {
 
@@ -23,12 +25,14 @@ public class ProductInventoryServiceImpl implements ProductInventoryService {
     @Override
     public void updateProductInventory(ProductInventory productInventory) {
         productInventoryMapper.updateProductInventory(productInventory);
+        log.info("prouductId: {}, 更新数据库中的数据",productInventory.getProductId());
     }
 
     @Override
     public void removeProductInventoryCache(ProductInventory productInventory) {
         String key = "product:inventory:" + productInventory.getProductId();
         redisDao.delete(key);
+        log.info("productId: {}, 删除缓存", productInventory.getProductId());
     }
 
     /**

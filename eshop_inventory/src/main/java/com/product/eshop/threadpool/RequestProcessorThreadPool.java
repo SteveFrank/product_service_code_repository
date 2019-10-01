@@ -30,6 +30,7 @@ public class RequestProcessorThreadPool {
      * 构造方法进行内存队列的初始化
      */
     private RequestProcessorThreadPool() {
+        // 存储十个队列用于Hash处理
         RequestQueue requestQueue = RequestQueue.getInstance();
         for (int i = 0; i < 10; i++) {
             // 初始化定长的BlockingQueue

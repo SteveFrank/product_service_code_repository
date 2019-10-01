@@ -70,6 +70,10 @@ public class RequestQueue {
         return queues.get(index);
     }
 
+    /**
+     * 对应的请求是否为读或者写请求
+     * @return
+     */
     public Map<Integer, Boolean> getFlagMap() {
         return flagMap;
     }

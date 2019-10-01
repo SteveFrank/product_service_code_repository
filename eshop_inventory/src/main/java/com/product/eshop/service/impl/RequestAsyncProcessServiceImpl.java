@@ -26,18 +26,22 @@ public class RequestAsyncProcessServiceImpl implements RequestAsyncProcessServic
             // 首先进行读请求的去重
             RequestQueue requestQueue = RequestQueue.getInstance();
             Map<Integer, Boolean> flagMap = requestQueue.getFlagMap();
+            // 进行请求判断 然后将对应的读写请求放入map中
             if (request instanceof ProductInventoryDBUpdateRequest) {
                 // 如果是一个更新数据库的请求
                 // 那么就将product对应的标识设置为true
                 flagMap.put(request.getProductId(), true);
             } else if (request instanceof ProductInventoryServiceImpl) {
+                // 如果是读请求，首先看是否存在当前商品在map中
                 Boolean flag = flagMap.get(request.getProductId());
                 // 如果flag是null
                 if(Objects.isNull(flag)) {
+                    // 如果不存在放入
                     flagMap.put(request.getProductId(), false);
                 }
-                // 如果是缓存刷新的请求，那么就判断，如果标识不为空，而且是true，就说明之前有一个这个商品的数据库更新请求
                 if(flag != null && flag) {
+                    // 如果是缓存刷新的请求，那么就判断，如果标识不为空，而且是true，就说明之前有一个这个商品的数据库更新请求
+                    // 如果存在数据更新的请求可以直接读取缓存中的数据
                     flagMap.put(request.getProductId(), false);
                 }
                 // 如果是缓存刷新的请求，而且发现标识不为空，但是标识是false
@@ -71,6 +75,7 @@ public class RequestAsyncProcessServiceImpl implements RequestAsyncProcessServic
         // 用内存队列的数量对hash值取模之后，结果一定是在0~7之间
         // 所以任何一个商品id都会被固定路由到同样的一个内存队列中去的
         int index = (requestQueue.queueSize() - 1) & hash;
+        log.info("productId: {}, index:{}", productId, index);
         return requestQueue.getQueue(index);
     }
 

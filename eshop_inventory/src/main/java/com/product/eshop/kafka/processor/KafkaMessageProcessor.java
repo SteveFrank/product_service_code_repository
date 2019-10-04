@@ -5,9 +5,14 @@ import com.product.eshop.model.ProductInfo;
 import com.product.eshop.model.ShopInfo;
 import com.product.eshop.service.CacheService;
 import com.product.eshop.spring.SpringContext;
+import com.product.eshop.zookeeper.ZooKeeperSession;
 import kafka.consumer.ConsumerIterator;
 import kafka.consumer.KafkaStream;
 import lombok.extern.slf4j.Slf4j;
+
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * @author yangqian
@@ -15,6 +20,8 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class KafkaMessageProcessor implements Runnable {
+
+    private static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
     private KafkaStream kafkaStream;
     private CacheService cacheService;
@@ -59,12 +66,39 @@ public class KafkaMessageProcessor implements Runnable {
         // 直接用注释模拟：getProductInfo?productId=1，传递过去
         // 商品信息服务，一般来说就会去查询数据库，去获取productId=1的商品信息，然后返回回来
 
-        String productInfoJSON = "{\"id\": 1, \"name\": \"iphone7手机\", \"price\": 5599, \"pictureList\":\"a.jpg,b.jpg\", \"specification\": \"iphone7的规格\", \"service\": \"iphone7的售后服务\", \"color\": \"红色,白色,黑色\", \"size\": \"5.5\", \"shopId\": 1}";
+        String productInfoJSON = "{\"id\": 5, \"name\": \"iphone7手机\", \"price\": 5599, \"pictureList\":\"a.jpg,b.jpg\", \"specification\": \"iphone7的规格\", \"service\": \"iphone7的售后服务\", \"color\": \"红色,白色,黑色\", \"size\": \"5.5\", \"shopId\": 1, \"modifiedTime\": \"2017-01-01 12:00:00\"}";
         ProductInfo productInfo = JSONObject.parseObject(productInfoJSON, ProductInfo.class);
         cacheService.saveProductInfo2LocalCache(productInfo);
         log.info("===== 获取刚保存到本地缓存的商品信息: {} =====",
                 cacheService.getProductInfoFromLocalCache(productId));
+
+        // 加入分布式锁的代码
+        // 将数据直接写入redis缓存之前 应该先获取一个zk的分布式锁
+        ZooKeeperSession zooKeeperSession = ZooKeeperSession.getInstance();
+        zooKeeperSession.acquireDistributedLock(productId);
+
+        // 获取到锁之后 先从redis中获取数据
+        ProductInfo existedProductInfo = cacheService.getProductInfoFromReidsCache(productId);
+        if (existedProductInfo != null) {
+            // 比较当亲数据的时间版本比已经有数据的时间版本是新还是旧
+            try {
+                Date date = sdf.parse(productInfo.getModifiedTime());
+                Date existedDate = sdf.parse(existedProductInfo.getModifiedTime());
+
+                if (date.before(existedDate)) {
+                    // 不进行更新
+                    return;
+                }
+
+            } catch (ParseException e) {
+                e.printStackTrace();
+            }
+        }
+        log.info("current date[" + productInfo.getModifiedTime() + "] is before than existedDate .");
+        cacheService.saveProductInfo2LocalCache(productInfo);
         cacheService.saveProductInfo2ReidsCache(productInfo);
+        // 释放缓存
+        zooKeeperSession.releaseDistributedLock(productId);
     }
 
     /**

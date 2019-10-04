@@ -96,4 +96,32 @@ public class CacheServiceImpl implements CacheService {
         String key = "shop_info_" + shopInfo.getId();
         jedisCluster.set(key, JSONObject.toJSONString(shopInfo));
     }
+
+    /**
+     * 从redis中获取商品信息
+     * @param productId
+     */
+    @Override
+    public ProductInfo getProductInfoFromReidsCache(Long productId) {
+        String key = "product_info_" + productId;
+        String json = jedisCluster.get(key);
+        if(json != null) {
+            return JSONObject.parseObject(json, ProductInfo.class);
+        }
+        return null;
+    }
+
+    /**
+     * 从redis中获取店铺信息
+     * @param shopId
+     */
+    @Override
+    public ShopInfo getShopInfoFromReidsCache(Long shopId) {
+        String key = "shop_info_" + shopId;
+        String json = jedisCluster.get(key);
+        if(json != null) {
+            return JSONObject.parseObject(json, ShopInfo.class);
+        }
+        return null;
+    }
 }

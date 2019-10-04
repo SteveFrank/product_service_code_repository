@@ -61,5 +61,18 @@ public interface CacheService {
      */
     public void saveShopInfo2ReidsCache(ShopInfo shopInfo);
 
+    /**
+     * 从Redis中获取商品信息
+     * @param productId 商品ID
+     * @return
+     */
+    public ProductInfo getProductInfoFromReidsCache(Long productId);
+
+    /**
+     * 从Redis中获取店铺信息
+     * @param shopId 店铺ID
+     * @return
+     */
+    public ShopInfo getShopInfoFromReidsCache(Long shopId);
 
 }
